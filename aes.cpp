@@ -5,20 +5,66 @@ using namespace std;
 
 /* Global Variables */
 
-int chunks [4][4] = 
-    {	0,0,0,0,
-			0,0,0,0,
-			0,0,0,0,
-			0,0,0,0  };
-
 int RoundKey[176]; //or is it 240?
 
 /* Functions */
 
+void printArrayInHex(int ** array)
+{
+	for (int i = 0; i < 4; i++)
+	{
+		for (int j = 0; j < 4; j++)
+		{
+			cout << std::hex << array[i][j];
+		}
+	}
+}
+
+bool isUpperCase (char part)
+{
+	return ((part - 'A') < 6); //is upperCase (up to F only)
+}
+
+bool isNumber(char part)
+{
+	return ((part - '0') < 9); //returns true if it is, meaning it is a number
+}
+
+void stringToIntArrays (string plainText, int ** plainTextInt)
+{
+	int plainTextTraversal = 0;
+	char part1, part2;
+	int part1Int, part2Int;
+
+	for (int i = 0; i < 4; i++)
+	{
+		for (int j = 0; j < 4; j++)
+		{
+			part1 = plainText[plainTextTraversal];
+			plainTextTraversal++;
+			part2 = plainText[plainTextTraversal];
+			plainTextTraversal++;
+			if (isNumber(part1))
+				part1Int = part1 - '0'; //should equal a numerical value
+			else if (isUpperCase(part1))
+				part1Int = part1 - 55; //should equal 0xA or 10 if A, 0xF or 15 if F
+			else
+				part1Int = part1 - 87; //should equal 0xA or 10 if a, 0xF or 15 if f
+			if (isNumber(part2))
+				part2Int = part2 - '0';
+			else if (isUpperCase(part2))
+				part2Int = part2 - 55;
+			else
+				part2Int = part2 - 87;
+			part1Int *= 16; //turns it into proper hexadecimal for the first number
+			plainTextInt[i][j] = part1Int + part2Int;
+		}
+	}
+}
+
 int getValueFromSubstitutionBox (int value)
 {
-	int sBox [256] = 
-      {	0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76,
+	int sBox [256] = {	0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76,
 				0xca, 0x82, 0xc9, 0x7d, 0xfa, 0x59, 0x47, 0xf0, 0xad, 0xd4, 0xa2, 0xaf, 0x9c, 0xa4, 0x72, 0xc0,
 				0xb7, 0xfd, 0x93, 0x26, 0x36, 0x3f, 0xf7, 0xcc, 0x34, 0xa5, 0xe5, 0xf1, 0x71, 0xd8, 0x31, 0x15,
 				0x04, 0xc7, 0x23, 0xc3, 0x18, 0x96, 0x05, 0x9a, 0x07, 0x12, 0x80, 0xe2, 0xeb, 0x27, 0xb2, 0x75,
@@ -37,7 +83,7 @@ int getValueFromSubstitutionBox (int value)
 	return sBox [value];
 }
 
-void substitution ()
+void substitution (int ** chunks)
 {
 	for (int i = 0; i < 4; i++)
 	{
@@ -48,13 +94,13 @@ void substitution ()
 	}
 }
 
-void shiftRows ()
+void shiftRows (int ** chunks)
 {
 	int swapTemp = 0;
 	//don't do anything to the 0th row
-	
+
 	//shift 1st row once left
-	
+
 	swapTemp = chunks[1][0];
 	chunks[1][0] = chunks[1][1];
 	chunks[1][1] = chunks[1][2];
@@ -72,7 +118,7 @@ void shiftRows ()
 	chunks[2][3] = swapTemp;
 
 	//shift 3rd row three times left
-	
+
 	swapTemp = chunks[3][0];
 	chunks[3][0] = chunks[3][3];
 	chunks[3][3] = chunks[3][2];
@@ -80,12 +126,12 @@ void shiftRows ()
 	chunks[3][1] = swapTemp;
 }
 
-void mixColumns ()
+void mixColumns (int ** chunks)
 {
 	//XOR something
 }
 
-void addRoundKey (int currentRound)
+void addRoundKey (int currentRound, int ** cipherTextInt)
 {
 	//XOR currentRound with chunks
 	for (int i = 0; i < 4; i++)
@@ -96,43 +142,88 @@ void addRoundKey (int currentRound)
 		} // ^ is a bitwise XOR
 	}
 
+	for (int i = 0; i < 128; i++) //AES-128 has a 128-bit block size
+	{
+		ciphertext[i] = plaintext[i]
+	}
+
 }
 
 int main ()
 {
-	//if input size > 128 then split into 128-bit chunks
-	//if input size < 128, then fill with 0s until 128-bits, 0x12 (8-bit) becomes 0x12000000000000000000000000000000 (128-bit)
-	//before starting, need to do addRoundKey for round 0
+	string plainText = "";
+	string key = "";
 
-	//each chunk has to go through the rounds, then the result
-	int currentChunksConcatentation = 0;
-	int finishedProduct = 0;
+	cout << "Enter hexadecimal-based plaintext (i.e., 0x1f, 0x2f is inputted as 1f2f): ";
+	getline(cin, plainText);
 
-	AddRoundKey(0);
-
-	for (int currentRound = 1; currentRound <= 9; currentRound++) //runs 9 times
+	if (plainText.length() > 32)
 	{
-		substitution ();
-		shiftRows ();
-		mixColumns ();
-		addRoundKey (currentRound);
+		cout << "That's coming up, try something smaller for now, maybe <= 128 bits (32 characters)" << endl;
+		return 1;
 	}
 
-	//10th round skips mixColumns
-	
-	substitution ();
-	shiftRows ();
-	addRoundKey (10);
+	cout << "Enter key in a similar way as above: ";
+	getline(cin, key);
 
+	if (key.length() > 32)
+	{
+		cout << "The key is only supposed to be 128-bits long, try again with a 32 character key." << endl;
+		return 1;
+	}
+
+	//if input size < 128, then fill with 0s until 128-bits, 0x12 (8-bit) becomes 0x12000000000000000000000000000000 (128-bit)
+
+	while (key.length() % 32 == 0)
+	{
+		key += "0"; //fill with 0s until it is 128-bit
+	}
+
+	while (plainText.length() % 32 == 0)
+	{
+		plainText += "0"; //fill with 0s until it is 128-bit
+	}
+
+	int plainTextInt [4][4];
+	stringToIntArrays(plainText, plainTextInt);
+
+	int keyInt[4][4];
+	stringToIntArrays(key, keyInt);
+
+	int cipherTextInt [4][4];
 	for (int i = 0; i < 4; i++)
 	{
 		for (int j = 0; j < 4; j++)
 		{
-			currentChunksConcatenation += chunks[i][j];
+			cipherTextInt[i][j] = plainTextInt[i][j]; //in essence, making a copy of plainTextInt array, this will be the one to undergo the transformations
 		}
 	}
-	
-	finishedProduct += currentChunksConcatenation;
-	cout << finishedProduct << endl;	
+
+	//if input size > 128 then split into 128-bit chunks
+
+	//before starting, need to do addRoundKey for round 0
+	string currentChunksConcatentation = "";
+	int cipherText[128];
+
+	AddRoundKey(0, cipherTextInt);
+
+	for (int currentRound = 1; currentRound <= 9; currentRound++) //runs 9 times
+	{
+		substitution (cipherTextInt);
+		shiftRows (cipherTextInt);
+		mixColumns (cipherTextInt);
+		addRoundKey (currentRound, cipherTextInt);
+	}
+
+	//10th round skips mixColumns
+	substitution (cipherTextInt);
+	shiftRows (cipherTextInt);
+	addRoundKey (10, cipherTextInt);
+
+	printArrayInHex(plainTextInt);
+	cout << " encrypted in AES-128 is ";
+	printArrayInHex(cipherTextInt);
+	cout << endl;
 	return 0;
+
 }
