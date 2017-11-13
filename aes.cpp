@@ -30,6 +30,16 @@ bool isNumber(char part)
 	return ((part - '0') <= 9); //returns true if it is, meaning it is a number [0-9]
 }
 
+int checks (char part)
+{
+	if (isNumber(part))
+		return part - '0'; //should be a numerical value
+	else if (isUpperCase(part))
+		return part - 55; //should equal 0xA or 10 if A, 0xF or 15 if F
+	else
+		return part - 87; //should equal 0xA or 10 if a, 0xF or 15 if f
+}
+
 void stringToIntArrays (string plainText, int (&plainTextInt)[4][4])
 {
 	int plainTextTraversal = 0;
@@ -41,24 +51,25 @@ void stringToIntArrays (string plainText, int (&plainTextInt)[4][4])
 		{
 			if (plainText.length() > plainTextTraversal)
 			{
-				part1 = plainText[plainTextTraversal];
-				plainTextTraversal++;
-				part2 = plainText[plainTextTraversal];
-				plainTextTraversal++;
-				if (isNumber(part1))
-					part1Int = part1 - '0'; //should equal a numerical value
-				else if (isUpperCase(part1))
-					part1Int = part1 - 55; //should equal 0xA or 10 if A, 0xF or 15 if F
+				if (plainText.length() == 1) //bottom only handles 2+ length
+				{
+					part1 = plainText[0];
+					plainTextTraversal++;
+					part1Int = checks(part1);
+					plainTextInt[i][j] = part1Int * 1; //multiplying by 1 makes it work for some reason
+				}
 				else
-					part1Int = part1 - 87; //should equal 0xA or 10 if a, 0xF or 15 if f
-				if (isNumber(part2))
-					part2Int = part2 - '0';
-				else if (isUpperCase(part2))
-					part2Int = part2 - 55;
-				else
-					part2Int = part2 - 87;
-				part1Int *= 16; //turns it into proper hexadecimal for the first number
-				plainTextInt[i][j] = part1Int + part2Int;
+				{
+					part1 = plainText[plainTextTraversal++];
+					part2 = plainText[plainTextTraversal++];
+
+					part1Int = checks(part1);
+					part2Int = checks(part2);
+
+					part1Int *= 16; //turns it into proper hexadecimal for the first number
+					part2Int *= 1; //same logic as above
+					plainTextInt[i][j] = part1Int + part2Int;
+				}
 			}
 			else
 				plainTextInt[i][j] = 0x00; //0x00, fill in rest with 0s until it is 128-bits
@@ -140,9 +151,9 @@ void shiftRows (int (&chunks)[4][4])
 void mixColumns (int (&chunks)[4][4])
 {
 	int mixColumnsWith[4][4] = {	0x02, 0x03, 0x01, 0x01,
-																0x01, 0x02, 0x03, 0x01,
-																0x01, 0x01, 0x02, 0x03,
-																0x03, 0x01, 0x01, 0x02	};
+					0x01, 0x02, 0x03, 0x01,
+					0x01, 0x01, 0x02, 0x03,
+					0x03, 0x01, 0x01, 0x02	};
 
 	int results[4] = { 	0,0,0,0	 };
 	int k = 0;
@@ -174,10 +185,10 @@ void mixColumns (int (&chunks)[4][4])
 				chunks[j][i] = results[0] ^ results[1] ^ results[2] ^ results[3]; //not i,j because we are editing column by column, not row by row
 
 				/* how the resulting equations are supposed to end up being from matrix multiplication
-				r0 = 2(b0) + 3(b1) + 1(b2) + 1(b3)
-				r1 = 1(b0) + 2(b1) + 3(b2) + 1(b3)
-				r2 = 1(b0) + 1(b1) + 2(b2) + 3(b3)
-				r3 = 3(b0) + 1(b1) + 1(b2) + 2(b3)
+				r0 = 2(c0,b0) + 3(c0,b1) + 1(c0,b2) + 1(c0,b3) column 0 (c0)
+				r1 = 1(c1,b0) + 2(c1,b1) + 3(c1,b2) + 1(c1,b3) column 1 (c1)
+				r2 = 1(c2,b0) + 1(c2,b1) + 2(c2,b2) + 3(c2,b3) column 2 (c2)
+				r3 = 3(c3,b0) + 1(c3,b1) + 1(c3,b2) + 2(c3,b3) column 3 (c3)
 				The multiplication is a "complicated operation" while the additions are XORs
 				*/
 		}
