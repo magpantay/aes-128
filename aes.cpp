@@ -22,12 +22,12 @@ void printArrayInHex(int (&array)[4][4])
 
 bool isUpperCase (char part)
 {
-	return ((part - 'A') < 6); //is upperCase (up to F only)
+	return ((part - 'A') < 6); //is upperCase (up to F only) [A-F]
 }
 
 bool isNumber(char part)
 {
-	return ((part - '0') < 9); //returns true if it is, meaning it is a number
+	return ((part - '0') <= 9); //returns true if it is, meaning it is a number [0-9]
 }
 
 void stringToIntArrays (string plainText, int (&plainTextInt)[4][4])
@@ -97,8 +97,8 @@ void substitution (int (&chunks)[4][4])
 			chunks[i][j] = getValueFromSubstitutionBox (chunks[i][j]);
 		}
 	}
-	cout << "In subby: ";
-	printArrayInHex(chunks); cout << endl;
+	/* cout << "In subby: ";
+	printArrayInHex(chunks); cout << endl; */
 } //works perfectly!
 
 void shiftRows (int (&chunks)[4][4])
@@ -132,17 +132,60 @@ void shiftRows (int (&chunks)[4][4])
 	chunks[3][2] = chunks[3][1];
 	chunks[3][1] = swapTemp;
 
-	cout << "In shiftRows" << endl;
+	/* cout << "In shiftRows" << endl;
 	printArrayInHex(chunks);
-	cout << endl;
+	cout << endl; */
 } //working!
 
 void mixColumns (int (&chunks)[4][4])
 {
+	int mixColumnsWith[4][4] = {	0x02, 0x03, 0x01, 0x01,
+																0x01, 0x02, 0x03, 0x01,
+																0x01, 0x01, 0x02, 0x03,
+																0x03, 0x01, 0x01, 0x02	};
+
+	int results[4] = { 	0,0,0,0	 };
+	int k = 0;
+	for (int i = 0; i < 4; i++)
+	{
+		for (int j = 0; j < 4; j++)
+		{
+				if (mixColumnsWith[i][j] == 1)
+				{
+					results[k++] = chunks[j][i];
+				}
+				else if (mixColumnsWith[i][j] == 2)
+				{
+					results[k] = chunks[j][i] << 1; //left shift to "multiply" by 2 in binary
+					if ((chunks[j][i] & 0x80) != 0x00) //special cautions take place since first binary digit would be 1 prior to shifting left 1
+						results[k++] ^= 0x1b; //XORs with specifically 0x1b or 0001 1011
+				 	//otherwise, continue as normal and just shift without XORing
+				 	else
+						k++; //need to increment k still
+				}
+				else //it's 3
+				{
+					int part1 = chunks[j][i] << 1; //do 2's mixColumns, then XOR it with 1's
+					int part2 = chunks[j][i]; //1's mixColumns
+					if ((chunks[j][i] & 0x80) != 0x00)
+						part1 ^= 0x1b;
+					results[k++] = part1 ^ part2;
+				}
+				chunks[j][i] = results[0] ^ results[1] ^ results[2] ^ results[3]; //not i,j because we are editing column by column, not row by row
+
+				/* how the resulting equations are supposed to end up being from matrix multiplication
+				r0 = 2(b0) + 3(b1) + 1(b2) + 1(b3)
+				r1 = 1(b0) + 2(b1) + 3(b2) + 1(b3)
+				r2 = 1(b0) + 1(b1) + 2(b2) + 3(b3)
+				r3 = 3(b0) + 1(b1) + 1(b2) + 2(b3)
+				The multiplication is a "complicated operation" while the additions are XORs
+				*/
+		}
+	}
 	//XOR something
-	cout << "In mixColumns" << endl;
+	/* cout << "In mixColumns" << endl;
 	printArrayInHex(chunks);
-	cout << endl;
+	cout << endl; */
 }
 
 void addRoundKey (int currentRound, int (&chunks)[4][4])
@@ -160,11 +203,11 @@ void addRoundKey (int currentRound, int (&chunks)[4][4])
 	{
 		ciphertext[i] = plaintext[i]
 	}*/
-	cout << "In addRoundKey, currentRound: " << currentRound << endl;
+	/* cout << "In addRoundKey, currentRound: " << currentRound << endl;
 	printArrayInHex(chunks);
-	cout << endl;
+	cout << endl; */
 }
-int main ()
+int main (int argc, char * argv[])
 {
 	string plainText = "";
 	string key = "";
@@ -227,6 +270,55 @@ int main ()
 	//if input size > 128 then split into 128-bit chunks
 
 	//before starting, need to do addRoundKey for round 0
+	if (argc > 1 && argc < 3)
+	{
+		if (*argv[1] == 'd')
+		{
+			int choice = 0;
+			cout << "Debugger mode: Please select one of the functions to test" << endl;
+			cout << "1. Substitution" << endl << "2. Shift Rows" << endl << "3. Mix Columns" << endl << "4. Add Round Key (0th round simulation only)" << endl;
+			cout << "Choice: ";
+			cin >> choice;
+			if (choice < 1 || choice > 4)
+			{
+				cout << "Incorrect choice." << endl;
+				return 1;
+			}
+			if (choice == 1)
+			{
+				substitution (cipherTextInt);
+				cout << "Output: ";
+				printArrayInHex(cipherTextInt);
+				cout << endl;
+				return 0;
+			}
+			else if (choice == 2)
+			{
+				shiftRows(cipherTextInt);
+				cout << "Output: ";
+				printArrayInHex(cipherTextInt);
+				cout << endl;
+				return 0;
+			}
+			else if (choice == 3)
+			{
+				mixColumns (cipherTextInt);
+				cout << "Output: ";
+				printArrayInHex(cipherTextInt);
+				cout << endl;
+				return 0;
+			}
+			else
+			{
+				addRoundKey(0, cipherTextInt);
+				cout << "Output: ";
+				printArrayInHex(cipherTextInt);
+				cout << endl;
+				return 0;
+			}
+		}
+	}
+
 	string currentChunksConcatentation = "";
 	int cipherText[128];
 
