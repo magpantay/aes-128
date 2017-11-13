@@ -9,7 +9,7 @@ int RoundKey[176]; //or is it 240?
 
 /* Functions */
 
-void printArrayInHex(int ** array)
+void printArrayInHex(int (&array)[4][4])
 {
 	for (int i = 0; i < 4; i++)
 	{
@@ -30,41 +30,46 @@ bool isNumber(char part)
 	return ((part - '0') < 9); //returns true if it is, meaning it is a number
 }
 
-void stringToIntArrays (string plainText, int ** plainTextInt)
+void stringToIntArrays (string plainText, int (&plainTextInt)[4][4])
 {
 	int plainTextTraversal = 0;
 	char part1, part2;
 	int part1Int, part2Int;
-
 	for (int i = 0; i < 4; i++)
 	{
 		for (int j = 0; j < 4; j++)
 		{
-			part1 = plainText[plainTextTraversal];
-			plainTextTraversal++;
-			part2 = plainText[plainTextTraversal];
-			plainTextTraversal++;
-			if (isNumber(part1))
-				part1Int = part1 - '0'; //should equal a numerical value
-			else if (isUpperCase(part1))
-				part1Int = part1 - 55; //should equal 0xA or 10 if A, 0xF or 15 if F
+			if (plainText.length() > plainTextTraversal)
+			{
+				part1 = plainText[plainTextTraversal];
+				plainTextTraversal++;
+				part2 = plainText[plainTextTraversal];
+				plainTextTraversal++;
+				if (isNumber(part1))
+					part1Int = part1 - '0'; //should equal a numerical value
+				else if (isUpperCase(part1))
+					part1Int = part1 - 55; //should equal 0xA or 10 if A, 0xF or 15 if F
+				else
+					part1Int = part1 - 87; //should equal 0xA or 10 if a, 0xF or 15 if f
+				if (isNumber(part2))
+					part2Int = part2 - '0';
+				else if (isUpperCase(part2))
+					part2Int = part2 - 55;
+				else
+					part2Int = part2 - 87;
+				part1Int *= 16; //turns it into proper hexadecimal for the first number
+				plainTextInt[i][j] = part1Int + part2Int;
+			}
 			else
-				part1Int = part1 - 87; //should equal 0xA or 10 if a, 0xF or 15 if f
-			if (isNumber(part2))
-				part2Int = part2 - '0';
-			else if (isUpperCase(part2))
-				part2Int = part2 - 55;
-			else
-				part2Int = part2 - 87;
-			part1Int *= 16; //turns it into proper hexadecimal for the first number
-			plainTextInt[i][j] = part1Int + part2Int;
+				plainTextInt[i][j] = 0x00; //0x00, fill in rest with 0s until it is 128-bits
 		}
 	}
 }
 
 int getValueFromSubstitutionBox (int value)
 {
-	int sBox [256] = {	0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76,
+	int sBox [256] = {
+				0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76,
 				0xca, 0x82, 0xc9, 0x7d, 0xfa, 0x59, 0x47, 0xf0, 0xad, 0xd4, 0xa2, 0xaf, 0x9c, 0xa4, 0x72, 0xc0,
 				0xb7, 0xfd, 0x93, 0x26, 0x36, 0x3f, 0xf7, 0xcc, 0x34, 0xa5, 0xe5, 0xf1, 0x71, 0xd8, 0x31, 0x15,
 				0x04, 0xc7, 0x23, 0xc3, 0x18, 0x96, 0x05, 0x9a, 0x07, 0x12, 0x80, 0xe2, 0xeb, 0x27, 0xb2, 0x75,
@@ -83,7 +88,7 @@ int getValueFromSubstitutionBox (int value)
 	return sBox [value];
 }
 
-void substitution (int ** chunks)
+void substitution (int (&chunks)[4][4])
 {
 	for (int i = 0; i < 4; i++)
 	{
@@ -92,9 +97,11 @@ void substitution (int ** chunks)
 			chunks[i][j] = getValueFromSubstitutionBox (chunks[i][j]);
 		}
 	}
-}
+	cout << "In subby: ";
+	printArrayInHex(chunks); cout << endl;
+} //works perfectly!
 
-void shiftRows (int ** chunks)
+void shiftRows (int (&chunks)[4][4])
 {
 	int swapTemp = 0;
 	//don't do anything to the 0th row
@@ -124,17 +131,24 @@ void shiftRows (int ** chunks)
 	chunks[3][3] = chunks[3][2];
 	chunks[3][2] = chunks[3][1];
 	chunks[3][1] = swapTemp;
-}
 
-void mixColumns (int ** chunks)
+	cout << "In shiftRows" << endl;
+	printArrayInHex(chunks);
+	cout << endl;
+} //working!
+
+void mixColumns (int (&chunks)[4][4])
 {
 	//XOR something
+	cout << "In mixColumns" << endl;
+	printArrayInHex(chunks);
+	cout << endl;
 }
 
-void addRoundKey (int currentRound, int ** cipherTextInt)
+void addRoundKey (int currentRound, int (&chunks)[4][4])
 {
 	//XOR currentRound with chunks
-	for (int i = 0; i < 4; i++)
+	/*for (int i = 0; i < 4; i++)
 	{
 		for (int j = 0; j < 4; j++)
 		{
@@ -145,10 +159,11 @@ void addRoundKey (int currentRound, int ** cipherTextInt)
 	for (int i = 0; i < 128; i++) //AES-128 has a 128-bit block size
 	{
 		ciphertext[i] = plaintext[i]
-	}
-
+	}*/
+	cout << "In addRoundKey, currentRound: " << currentRound << endl;
+	printArrayInHex(chunks);
+	cout << endl;
 }
-
 int main ()
 {
 	string plainText = "";
@@ -173,22 +188,32 @@ int main ()
 	}
 
 	//if input size < 128, then fill with 0s until 128-bits, 0x12 (8-bit) becomes 0x12000000000000000000000000000000 (128-bit)
-
+/*
 	while (key.length() % 32 == 0)
 	{
-		key += "0"; //fill with 0s until it is 128-bit
+		key.append("0", 1); //fill with 0s until it is 128-bit
 	}
 
 	while (plainText.length() % 32 == 0)
 	{
-		plainText += "0"; //fill with 0s until it is 128-bit
+		plainText.append("0", 1); //fill with 0s until it is 128-bit
 	}
+*/
+	cout << "Plaintext before conversion: " << plainText << endl;
+	cout << "Key before conversion: " << key << endl;
 
 	int plainTextInt [4][4];
 	stringToIntArrays(plainText, plainTextInt);
 
+	cout << "Plaintext after conversion: ";
+	printArrayInHex(plainTextInt);
+	cout << endl;
+
+	cout << "Key after conversion: ";
 	int keyInt[4][4];
 	stringToIntArrays(key, keyInt);
+	printArrayInHex(keyInt);
+	cout << endl;
 
 	int cipherTextInt [4][4];
 	for (int i = 0; i < 4; i++)
@@ -205,7 +230,7 @@ int main ()
 	string currentChunksConcatentation = "";
 	int cipherText[128];
 
-	AddRoundKey(0, cipherTextInt);
+	addRoundKey(0, cipherTextInt);
 
 	for (int currentRound = 1; currentRound <= 9; currentRound++) //runs 9 times
 	{
