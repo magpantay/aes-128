@@ -1,11 +1,11 @@
 #include <iostream>
 #include <string>
+#include <cstdint> //for uint8_t
+#include <iomanip> //for precision printing
 
 using namespace std;
 
 /* Global Variables */
-
-int RoundKey[176]; //or is it 240?
 
 /* Functions */
 
@@ -15,12 +15,12 @@ void printArrayInHex(int (&array)[4][4])
 	{
 		for (int j = 0; j < 4; j++)
 		{
-			cout << std::hex << array[i][j];
+			cout << setfill('0') << setw(2) << std::hex << array[i][j]; //because 0x00 prints as 0 instead of 00
 		}
 	}
 }
 
-bool isUpperCase (char part)
+bool isUpperCase(char part)
 {
 	return ((part - 'A') < 6); //is upperCase (up to F only) [A-F]
 }
@@ -51,7 +51,7 @@ void stringToIntArrays (string plainText, int (&plainTextInt)[4][4])
 		{
 			if (plainText.length() > plainTextTraversal)
 			{
-				if (plainText.length() == 1) //bottom only handles 2+ length
+				if (plainText.length() == 1) //else only handles 2+ length, needed to account for key sizes of 1
 				{
 					part1 = plainText[0];
 					plainTextTraversal++;
@@ -108,8 +108,6 @@ void substitution (int (&chunks)[4][4])
 			chunks[i][j] = getValueFromSubstitutionBox (chunks[i][j]);
 		}
 	}
-	/* cout << "In subby: ";
-	printArrayInHex(chunks); cout << endl; */
 } //works perfectly!
 
 void shiftRows (int (&chunks)[4][4])
@@ -143,60 +141,59 @@ void shiftRows (int (&chunks)[4][4])
 	chunks[3][2] = chunks[3][1];
 	chunks[3][1] = swapTemp;
 
-	/* cout << "In shiftRows" << endl;
-	printArrayInHex(chunks);
-	cout << endl; */
 } //working!
 
 void mixColumns (int (&chunks)[4][4])
 {
-	int mixColumnsWith[4][4] = {	0x02, 0x03, 0x01, 0x01,
-					0x01, 0x02, 0x03, 0x01,
-					0x01, 0x01, 0x02, 0x03,
-					0x03, 0x01, 0x01, 0x02	};
+	uint8_t mixColumnsWith[4][4] = {	0x02, 0x03, 0x01, 0x01,
+						0x01, 0x02, 0x03, 0x01,
+						0x01, 0x01, 0x02, 0x03,
+						0x03, 0x01, 0x01, 0x02	};
 
-	int results[4] = { 	0,0,0,0	 };
-	int k = 0;
+	uint8_t results[4] = { 	0,0,0,0  }; //may be necessary for XOR operations (since we're actually supposed to be limited to 8-bits)
+	uint8_t currentRow[4] = {	0,0,0,0	};
 	for (int i = 0; i < 4; i++)
 	{
+		currentRow[0] = mixColumnsWith[i][0];
+		currentRow[1] = mixColumnsWith[i][1];
+		currentRow[2] = mixColumnsWith[i][2];
+		currentRow[3] = mixColumnsWith[i][3];
 		for (int j = 0; j < 4; j++)
 		{
-				if (mixColumnsWith[i][j] == 1)
+			if (currentRow[j] == 0x01) //if current mixColumns is 1
+			{
+				results[j] = chunks[j][i]; //nothing happens, it's like multiplying by 1
+			}
+			else if (currentRow[j] == 0x02) //if current mixColumns is 2
+			{
+				results[j] = chunks[j][i] << 1; //left shift by 1 bit
+				if ((chunks[j][i] & 0x80) != 0x00) //firstmost binary bit is a 1 then
 				{
-					results[k++] = chunks[j][i];
+					results[j] = results[j] ^ 0x1b; //XOR with 0001 1011
 				}
-				else if (mixColumnsWith[i][j] == 2)
+			}
+			else //it's 3
+			{
+				uint8_t xorWith2, xorWithNothing; //you do 2's operation and XOR the result with the result of 1's operation (nothing)
+				xorWith2 = chunks[j][i] << 1; //left shift by 1 bit
+				xorWithNothing = chunks[j][i]; //literally nothing lol
+				if ((chunks[j][i] & 0x80) != 0x00) //firstmost binary bit is a 1 then
 				{
-					results[k] = chunks[j][i] << 1; //left shift to "multiply" by 2 in binary
-					if ((chunks[j][i] & 0x80) != 0x00) //special cautions take place since first binary digit would be 1 prior to shifting left 1
-						results[k++] ^= 0x1b; //XORs with specifically 0x1b or 0001 1011
-				 	//otherwise, continue as normal and just shift without XORing
-				 	else
-						k++; //need to increment k still
+					xorWith2 = xorWith2 ^ 0x1b; //XOR with 0001 1011
 				}
-				else //it's 3
-				{
-					int part1 = chunks[j][i] << 1; //do 2's mixColumns, then XOR it with 1's
-					int part2 = chunks[j][i]; //1's mixColumns
-					if ((chunks[j][i] & 0x80) != 0x00)
-						part1 ^= 0x1b;
-					results[k++] = part1 ^ part2;
-				}
-				chunks[j][i] = results[0] ^ results[1] ^ results[2] ^ results[3]; //not i,j because we are editing column by column, not row by row
-
-				/* how the resulting equations are supposed to end up being from matrix multiplication
-				r0 = 2(c0,b0) + 3(c0,b1) + 1(c0,b2) + 1(c0,b3) column 0 (c0)
-				r1 = 1(c1,b0) + 2(c1,b1) + 3(c1,b2) + 1(c1,b3) column 1 (c1)
-				r2 = 1(c2,b0) + 1(c2,b1) + 2(c2,b2) + 3(c2,b3) column 2 (c2)
-				r3 = 3(c3,b0) + 1(c3,b1) + 1(c3,b2) + 2(c3,b3) column 3 (c3)
-				The multiplication is a "complicated operation" while the additions are XORs
-				*/
+				results[j] = xorWith2 ^ xorWithNothing; //XOR the results, as mentioned earlier
+			}
+			chunks[j][i] = results[0] ^ results[1] ^ results[2] ^ results[3]; //not i,j because we are editing column by column, not row by row
 		}
+
 	}
-	//XOR something
-	/* cout << "In mixColumns" << endl;
-	printArrayInHex(chunks);
-	cout << endl; */
+
+	/* how the resulting equations are supposed to end up being from matrix multiplication
+				r0 = 2(c0,b0) + 3(c0,b1) + 1(c0,b2) + 1(c0,b3) ||| column n, row 0 (c0)
+				r1 = 1(c1,b0) + 2(c1,b1) + 3(c1,b2) + 1(c1,b3) ||| column n, row 1 (c1)
+				r2 = 1(c2,b0) + 1(c2,b1) + 2(c2,b2) + 3(c2,b3) ||| column n, row 2 (c2)
+				r3 = 3(c3,b0) + 1(c3,b1) + 1(c3,b2) + 2(c3,b3) ||| column n, row 3 (c3)
+		 The multiplication is a "complicated operation" while the additions are XOR */
 }
 
 void addRoundKey (int currentRound, int (&chunks)[4][4])
@@ -214,9 +211,6 @@ void addRoundKey (int currentRound, int (&chunks)[4][4])
 	{
 		ciphertext[i] = plaintext[i]
 	}*/
-	/* cout << "In addRoundKey, currentRound: " << currentRound << endl;
-	printArrayInHex(chunks);
-	cout << endl; */
 }
 int main (int argc, char * argv[])
 {
@@ -241,29 +235,17 @@ int main (int argc, char * argv[])
 		return 1;
 	}
 
-	//if input size < 128, then fill with 0s until 128-bits, 0x12 (8-bit) becomes 0x12000000000000000000000000000000 (128-bit)
-/*
-	while (key.length() % 32 == 0)
-	{
-		key.append("0", 1); //fill with 0s until it is 128-bit
-	}
-
-	while (plainText.length() % 32 == 0)
-	{
-		plainText.append("0", 1); //fill with 0s until it is 128-bit
-	}
-*/
 	cout << "Plaintext before conversion: " << plainText << endl;
 	cout << "Key before conversion: " << key << endl;
 
 	int plainTextInt [4][4];
-	stringToIntArrays(plainText, plainTextInt);
+	stringToIntArrays(plainText, plainTextInt); //need to convert from string to int to perform mathematical operations
 
-	cout << "Plaintext after conversion: ";
+	cout << "Plaintext after conversion: "; //just as a check
 	printArrayInHex(plainTextInt);
 	cout << endl;
 
-	cout << "Key after conversion: ";
+	cout << "Key after conversion: "; //same logic as above
 	int keyInt[4][4];
 	stringToIntArrays(key, keyInt);
 	printArrayInHex(keyInt);
@@ -278,10 +260,11 @@ int main (int argc, char * argv[])
 		}
 	}
 
-	//if input size > 128 then split into 128-bit chunks
+	//if input size > 128 then split into 128-bit chunks (will do later, need to get mixColumns and addRoundKey functioning first)
 
 	//before starting, need to do addRoundKey for round 0
-	if (argc > 1 && argc < 3)
+
+	if (argc > 1 && argc < 3) //for debug mode
 	{
 		if (*argv[1] == 'd')
 		{
@@ -330,9 +313,6 @@ int main (int argc, char * argv[])
 		}
 	}
 
-	string currentChunksConcatentation = "";
-	int cipherText[128];
-
 	addRoundKey(0, cipherTextInt);
 
 	for (int currentRound = 1; currentRound <= 9; currentRound++) //runs 9 times
@@ -348,10 +328,11 @@ int main (int argc, char * argv[])
 	shiftRows (cipherTextInt);
 	addRoundKey (10, cipherTextInt);
 
+	//printing time
 	printArrayInHex(plainTextInt);
 	cout << " encrypted in AES-128 is ";
 	printArrayInHex(cipherTextInt);
 	cout << endl;
-	return 0;
 
+	return 0;
 }
