@@ -1,6 +1,5 @@
 #include <iostream>
 #include <string>
-//#include <cstdint> //for uint8_t
 #include <iomanip> //for precision printing
 
 using namespace std;
@@ -196,25 +195,29 @@ void mixColumns (int (&chunks)[4][4])
 	int results[4] = { 	0,0,0,0  }; //may be necessary for XOR operations (since we're actually supposed to be limited to 8-bits)
 	int currentRowMCW[4] =	{	0,0,0,0	};
 	int currentColumnC[4] = {	0,0,0,0	};
-	int result = 0;
 
-	for (int j = 0; j < 4; j++)
+	//apologies about the horrendous-looking code, it works and that's all that matters for now
+	//especially since it took me like 3 days of thinking how to approach this
+	for (int k = 0; k < 4; k++)
 	{
-		for (int i = 0; i < 4; i++)
+		for (int j = 0; j < 4; j++)
 		{
-			currentRowMCW[0] = mixColumnsWith[i][0];
-			currentRowMCW[1] = mixColumnsWith[i][1];
-			currentRowMCW[2] = mixColumnsWith[i][2];
-			currentRowMCW[3] = mixColumnsWith[i][3];
-
-			currentColumnC[0] = chunks[0][j];
-			currentColumnC[1] = chunks[1][j];
-			currentColumnC[2] = chunks[2][j];
-			currentColumnC[3] = chunks[3][j];
-			chunks[i][j] = calculations(currentRowMCW, currentColumnC);
+			for (int i = 0; i < 4; i++)
+			{
+				currentColumnC[i] = chunks[i][k]; //currentColumn is k
+				currentRowMCW[i] = mixColumnsWith[j][i]; //currentRow is j
+			}
+			//currentRow++;
+			results[j] = calculations(currentRowMCW, currentColumnC);
 		}
+		/* flush results from results to chunks */
+		for (int l = 0; l < 4; l++)
+		{
+			chunks[l][k] = results[l]; //currentColumn is k
+		}
+		//currentColumn++; //increment currentColumn to manipulate the next column in our 4x4 matrix
+		//currentRow = 0; //reset currentRow to 0 for manipulation of next column (think: 1x4 (currentColumnC) and 4x4 (mixColumnsWith) matrix multiplication, which leads to a 1x4 (results) matrix
 	}
-
 	/* how the resulting equations are supposed to end up being from matrix multiplication
 				r0 = 2(c0,b0) + 3(c0,b1) + 1(c0,b2) + 1(c0,b3) ||| column n, row 0 (c0)
 				r1 = 1(c1,b0) + 2(c1,b1) + 3(c1,b2) + 1(c1,b3) ||| column n, row 1 (c1)
