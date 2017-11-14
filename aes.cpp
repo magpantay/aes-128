@@ -308,7 +308,18 @@ int main (int argc, char * argv[])
 			if (choice == 0)
 			{
 				int n1[4] = {0,0,0,0};
-				int mixC[4] = {2, 3, 1, 1};
+				int mixCD[4][4] = {2, 3, 1, 1,
+													1,2,3,1,
+													1,1,2,3,
+													3,1,1,2};
+				cout << "Choose row from mixC: ";
+				int rowChoice = 0;
+				cin >> rowChoice;
+				int mixC[4] = {0,0,0,0};
+				for (int i = 0; i < 4; i++)
+				{
+					mixC[i] = mixCD[rowChoice][i];
+				}
 				cout << "Inputs: ";
 				cin >> n1[0] >> n1[1] >> n1[2] >> n1[3];
 				cout << "Output: " << int(calculations(mixC, n1));
