@@ -1,6 +1,6 @@
 #include <iostream>
 #include <string>
-#include <cstdint> //for uint8_t
+//#include <cstdint> //for uint8_t
 #include <iomanip> //for precision printing
 
 using namespace std;
@@ -143,49 +143,76 @@ void shiftRows (int (&chunks)[4][4])
 
 } //working!
 
-void mixColumns (int (&chunks)[4][4])
+int calculations (int currentRowMCW[4], int currentColumnC[4])
 {
-	uint8_t mixColumnsWith[4][4] = {	0x02, 0x03, 0x01, 0x01,
-						0x01, 0x02, 0x03, 0x01,
-						0x01, 0x01, 0x02, 0x03,
-						0x03, 0x01, 0x01, 0x02	};
-
-	uint8_t results[4] = { 	0,0,0,0  }; //may be necessary for XOR operations (since we're actually supposed to be limited to 8-bits)
-	uint8_t currentRow[4] = {	0,0,0,0	};
+	int ret_val_array[4] = {0,0,0,0};
 	for (int i = 0; i < 4; i++)
 	{
-		currentRow[0] = mixColumnsWith[i][0];
-		currentRow[1] = mixColumnsWith[i][1];
-		currentRow[2] = mixColumnsWith[i][2];
-		currentRow[3] = mixColumnsWith[i][3];
-		for (int j = 0; j < 4; j++)
+		if (currentRowMCW[i] == 0x01)
 		{
-			if (currentRow[j] == 0x01) //if current mixColumns is 1
-			{
-				results[j] = chunks[j][i]; //nothing happens, it's like multiplying by 1
-			}
-			else if (currentRow[j] == 0x02) //if current mixColumns is 2
-			{
-				results[j] = chunks[j][i] << 1; //left shift by 1 bit
-				if ((chunks[j][i] & 0x80) != 0x00) //firstmost binary bit is a 1 then
-				{
-					results[j] = results[j] ^ 0x1b; //XOR with 0001 1011
-				}
-			}
-			else //it's 3
-			{
-				uint8_t xorWith2, xorWithNothing; //you do 2's operation and XOR the result with the result of 1's operation (nothing)
-				xorWith2 = chunks[j][i] << 1; //left shift by 1 bit
-				xorWithNothing = chunks[j][i]; //literally nothing lol
-				if ((chunks[j][i] & 0x80) != 0x00) //firstmost binary bit is a 1 then
-				{
-					xorWith2 = xorWith2 ^ 0x1b; //XOR with 0001 1011
-				}
-				results[j] = xorWith2 ^ xorWithNothing; //XOR the results, as mentioned earlier
-			}
-			chunks[j][i] = results[0] ^ results[1] ^ results[2] ^ results[3]; //not i,j because we are editing column by column, not row by row
+			ret_val_array[i] = currentColumnC[i]; //nothing happens, it's like multiplying by 1
 		}
+		else if (currentRowMCW[i] == 0x02)
+		{
+			//cout << "0x02: " << currentColumnC[i] << endl;
+			ret_val_array[i] = currentColumnC[i] << 1; //left shift 1
+			//cout << "Left shift: " << ret_val_array[i] << endl;
+			if ((currentColumnC[i] & 0x80) == 0x80) //firstmost binary bit is a 1 then
+			{
+				ret_val_array[i] = ret_val_array[i] & 0xff; //to get rid of the leading 1
+				//cout << "And mask: " << ret_val_array[i] << endl;
+				ret_val_array[i] = ret_val_array[i] ^ 0x1b; //XOR with 0001 1011
+				//cout << "XOR 1b: " << ret_val_array[i] << endl;
+			}
+		}
+		else
+		{
+			//cout << "0x03 thing: " << currentColumnC[i] << endl;
+			int p1_ret_val = currentColumnC[i] << 1;
+			//cout << "0x03 P1: " << p1_ret_val << endl;
+			int p2_ret_val = currentColumnC[i];
+			if ((currentColumnC[i] & 0x80) != 0x00) //firstmost binary bit is a 1 then
+			{
+				p1_ret_val = p1_ret_val & 0xff; // to get rid of the leading 1
+				//cout << "And mas: " << p1_ret_val << endl;
+				p1_ret_val = p1_ret_val ^ 0x1b; //XOR with 0001 1011
+				//cout << "XOR thing: " << p1_ret_val << endl;
+			}
+			ret_val_array[i] = p1_ret_val ^ p2_ret_val; //XOR the results, as mentioned earlier
+		}
+	}
+	int ret_val = ret_val_array[0] ^ ret_val_array[1] ^ ret_val_array[2] ^ ret_val_array[3];
+	//cout << std::hex << int(ret_val_array[0]) << " " << std::hex << int(ret_val_array[1]) << " " << std::hex << int(ret_val_array[2]) << " " << std::hex << int(ret_val_array[3]) << endl;
+	return ret_val;
+}
 
+void mixColumns (int (&chunks)[4][4])
+{
+	int mixColumnsWith[4][4] = {	0x02, 0x03, 0x01, 0x01,
+																0x01, 0x02, 0x03, 0x01,
+																0x01, 0x01, 0x02, 0x03,
+																0x03, 0x01, 0x01, 0x02	};
+
+	int results[4] = { 	0,0,0,0  }; //may be necessary for XOR operations (since we're actually supposed to be limited to 8-bits)
+	int currentRowMCW[4] =	{	0,0,0,0	};
+	int currentColumnC[4] = {	0,0,0,0	};
+	int result = 0;
+
+	for (int j = 0; j < 4; j++)
+	{
+		for (int i = 0; i < 4; i++)
+		{
+			currentRowMCW[0] = mixColumnsWith[i][0];
+			currentRowMCW[1] = mixColumnsWith[i][1];
+			currentRowMCW[2] = mixColumnsWith[i][2];
+			currentRowMCW[3] = mixColumnsWith[i][3];
+
+			currentColumnC[0] = chunks[0][j];
+			currentColumnC[1] = chunks[1][j];
+			currentColumnC[2] = chunks[2][j];
+			currentColumnC[3] = chunks[3][j];
+			chunks[i][j] = calculations(currentRowMCW, currentColumnC);
+		}
 	}
 
 	/* how the resulting equations are supposed to end up being from matrix multiplication
@@ -273,10 +300,19 @@ int main (int argc, char * argv[])
 			cout << "1. Substitution" << endl << "2. Shift Rows" << endl << "3. Mix Columns" << endl << "4. Add Round Key (0th round simulation only)" << endl;
 			cout << "Choice: ";
 			cin >> choice;
-			if (choice < 1 || choice > 4)
+			if (choice < 0 || choice > 4)
 			{
 				cout << "Incorrect choice." << endl;
 				return 1;
+			}
+			if (choice == 0)
+			{
+				int n1[4] = {0,0,0,0};
+				int mixC[4] = {2, 3, 1, 1};
+				cout << "Inputs: ";
+				cin >> n1[0] >> n1[1] >> n1[2] >> n1[3];
+				cout << "Output: " << int(calculations(mixC, n1));
+				return 0;
 			}
 			if (choice == 1)
 			{
