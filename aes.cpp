@@ -7,6 +7,23 @@ using namespace std;
 /* Global Variables */
 
 /* Functions */
+int rCon[256] = {
+  0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36, 0x6c, 0xd8, 0xab, 0x4d, 0x9a,
+  0x2f, 0x5e, 0xbc, 0x63, 0xc6, 0x97, 0x35, 0x6a, 0xd4, 0xb3, 0x7d, 0xfa, 0xef, 0xc5, 0x91, 0x39,
+  0x72, 0xe4, 0xd3, 0xbd, 0x61, 0xc2, 0x9f, 0x25, 0x4a, 0x94, 0x33, 0x66, 0xcc, 0x83, 0x1d, 0x3a,
+  0x74, 0xe8, 0xcb, 0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36, 0x6c, 0xd8,
+  0xab, 0x4d, 0x9a, 0x2f, 0x5e, 0xbc, 0x63, 0xc6, 0x97, 0x35, 0x6a, 0xd4, 0xb3, 0x7d, 0xfa, 0xef,
+  0xc5, 0x91, 0x39, 0x72, 0xe4, 0xd3, 0xbd, 0x61, 0xc2, 0x9f, 0x25, 0x4a, 0x94, 0x33, 0x66, 0xcc,
+  0x83, 0x1d, 0x3a, 0x74, 0xe8, 0xcb, 0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b,
+  0x36, 0x6c, 0xd8, 0xab, 0x4d, 0x9a, 0x2f, 0x5e, 0xbc, 0x63, 0xc6, 0x97, 0x35, 0x6a, 0xd4, 0xb3,
+  0x7d, 0xfa, 0xef, 0xc5, 0x91, 0x39, 0x72, 0xe4, 0xd3, 0xbd, 0x61, 0xc2, 0x9f, 0x25, 0x4a, 0x94,
+  0x33, 0x66, 0xcc, 0x83, 0x1d, 0x3a, 0x74, 0xe8, 0xcb, 0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20,
+  0x40, 0x80, 0x1b, 0x36, 0x6c, 0xd8, 0xab, 0x4d, 0x9a, 0x2f, 0x5e, 0xbc, 0x63, 0xc6, 0x97, 0x35,
+  0x6a, 0xd4, 0xb3, 0x7d, 0xfa, 0xef, 0xc5, 0x91, 0x39, 0x72, 0xe4, 0xd3, 0xbd, 0x61, 0xc2, 0x9f,
+  0x25, 0x4a, 0x94, 0x33, 0x66, 0xcc, 0x83, 0x1d, 0x3a, 0x74, 0xe8, 0xcb, 0x8d, 0x01, 0x02, 0x04,
+  0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36, 0x6c, 0xd8, 0xab, 0x4d, 0x9a, 0x2f, 0x5e, 0xbc, 0x63,
+  0xc6, 0x97, 0x35, 0x6a, 0xd4, 0xb3, 0x7d, 0xfa, 0xef, 0xc5, 0x91, 0x39, 0x72, 0xe4, 0xd3, 0xbd,
+  0x61, 0xc2, 0x9f, 0x25, 0x4a, 0x94, 0x33, 0x66, 0xcc, 0x83, 0x1d, 0x3a, 0x74, 0xe8, 0xcb, 0x8d };
 
 void printArrayInHex(int (&array)[4][4])
 {
@@ -17,6 +34,11 @@ void printArrayInHex(int (&array)[4][4])
 			cout << setfill('0') << setw(2) << std::hex << array[i][j]; //because 0x00 prints as 0 instead of 00
 		}
 	}
+}
+
+void generateRoundKeys(int (&roundKeyArray)[4][40], int key[4][4])
+{
+
 }
 
 bool isUpperCase(char part)
@@ -196,8 +218,9 @@ void mixColumns (int (&chunks)[4][4])
 	int currentRowMCW[4] =	{	0,0,0,0	};
 	int currentColumnC[4] = {	0,0,0,0	};
 
-	//apologies about the horrendous-looking code, it works and that's all that matters for now
-	//especially since it took me like 3 days of thinking how to approach this
+	/* apologies about the horrendous-looking code below, it works and that's all that matters for now
+	especially since it took me like 3 days of thinking how to approach this */
+
 	for (int k = 0; k < 4; k++)
 	{
 		for (int j = 0; j < 4; j++)
@@ -208,7 +231,7 @@ void mixColumns (int (&chunks)[4][4])
 				currentRowMCW[i] = mixColumnsWith[j][i]; //currentRow is j
 			}
 			//currentRow++;
-			results[j] = calculations(currentRowMCW, currentColumnC);
+			results[j] = calculations(currentRowMCW, currentColumnC); //fills results with calculations, then will flush later
 		}
 		/* flush results from results to chunks */
 		for (int l = 0; l < 4; l++)
@@ -218,15 +241,9 @@ void mixColumns (int (&chunks)[4][4])
 		//currentColumn++; //increment currentColumn to manipulate the next column in our 4x4 matrix
 		//currentRow = 0; //reset currentRow to 0 for manipulation of next column (think: 1x4 (currentColumnC) and 4x4 (mixColumnsWith) matrix multiplication, which leads to a 1x4 (results) matrix
 	}
-	/* how the resulting equations are supposed to end up being from matrix multiplication
-				r0 = 2(c0,b0) + 3(c0,b1) + 1(c0,b2) + 1(c0,b3) ||| column n, row 0 (c0)
-				r1 = 1(c1,b0) + 2(c1,b1) + 3(c1,b2) + 1(c1,b3) ||| column n, row 1 (c1)
-				r2 = 1(c2,b0) + 1(c2,b1) + 2(c2,b2) + 3(c2,b3) ||| column n, row 2 (c2)
-				r3 = 3(c3,b0) + 1(c3,b1) + 1(c3,b2) + 2(c3,b3) ||| column n, row 3 (c3)
-		 The multiplication is a "complicated operation" while the additions are XOR */
 }
 
-void addRoundKey (int currentRound, int (&chunks)[4][4])
+void addRoundKey (int key[4][4], int (&chunks)[4][4])
 {
 	//XOR currentRound with chunks
 	/*for (int i = 0; i < 4; i++)
@@ -241,6 +258,22 @@ void addRoundKey (int currentRound, int (&chunks)[4][4])
 	{
 		ciphertext[i] = plaintext[i]
 	}*/
+
+	/* According to the video:
+	Take the last column, rotate it (so 9,cf,4f,3c becomes cf,4f,3c,9)
+	Do SubBytes on it (use substitution())
+	XOR with first column of key
+	XOR that result with first column of RCon (then second, third, etc. until 10th)
+	This results in the first column of roundKey
+
+	Second, third, fourth column:
+	Take second/third/fourth column of key, XOR it with result got earlier from first/second/third column result
+
+	Repeat until 10th roundkey 4x4 matrix is filled
+
+	These 4x4 matrices will be your roundKeys for each round
+	All you do is XOR column of chunks with column of roundKey, 1-to-1
+	*/
 }
 int main (int argc, char * argv[])
 {
@@ -289,10 +322,7 @@ int main (int argc, char * argv[])
 			cipherTextInt[i][j] = plainTextInt[i][j]; //in essence, making a copy of plainTextInt array, this will be the one to undergo the transformations
 		}
 	}
-
 	//if input size > 128 then split into 128-bit chunks (will do later, need to get mixColumns and addRoundKey functioning first)
-
-	//before starting, need to do addRoundKey for round 0
 
 	if (argc > 1 && argc < 3) //for debug mode
 	{
@@ -300,7 +330,7 @@ int main (int argc, char * argv[])
 		{
 			int choice = 0;
 			cout << "Debugger mode: Please select one of the functions to test" << endl;
-			cout << "1. Substitution" << endl << "2. Shift Rows" << endl << "3. Mix Columns" << endl << "4. Add Round Key (0th round simulation only)" << endl;
+			cout << "0. Simulate Substitution, Shift Rows, then Mix Columns" << endl << "1. Substitution" << endl << "2. Shift Rows" << endl << "3. Mix Columns" << endl << "4. Add Round Key (0th round simulation only)" << endl;
 			cout << "Choice: ";
 			cin >> choice;
 			if (choice < 0 || choice > 4)
@@ -310,25 +340,15 @@ int main (int argc, char * argv[])
 			}
 			if (choice == 0)
 			{
-				int n1[4] = {0,0,0,0};
-				int mixCD[4][4] = {2, 3, 1, 1,
-													1,2,3,1,
-													1,1,2,3,
-													3,1,1,2};
-				cout << "Choose row from mixC: ";
-				int rowChoice = 0;
-				cin >> rowChoice;
-				int mixC[4] = {0,0,0,0};
-				for (int i = 0; i < 4; i++)
-				{
-					mixC[i] = mixCD[rowChoice][i];
-				}
-				cout << "Inputs: ";
-				cin >> n1[0] >> n1[1] >> n1[2] >> n1[3];
-				cout << "Output: " << int(calculations(mixC, n1));
+				substitution(cipherTextInt);
+				shiftRows(cipherTextInt);
+				mixColumns(cipherTextInt);
+				cout << "Output: ";
+				printArrayInHex(cipherTextInt);
+				cout << endl;
 				return 0;
 			}
-			if (choice == 1)
+			else if (choice == 1)
 			{
 				substitution (cipherTextInt);
 				cout << "Output: ";
@@ -363,14 +383,25 @@ int main (int argc, char * argv[])
 		}
 	}
 
-	addRoundKey(0, cipherTextInt);
+	int roundKeys[4][40];
+	generateRoundKeys(roundKeys, keyInt);
+	//before starting, need to do addRoundKey for round 0
+	addRoundKey(keyInt, cipherTextInt);
 
+	int currentRoundKey[4][4];
 	for (int currentRound = 1; currentRound <= 9; currentRound++) //runs 9 times
 	{
 		substitution (cipherTextInt);
 		shiftRows (cipherTextInt);
 		mixColumns (cipherTextInt);
-		addRoundKey (currentRound, cipherTextInt);
+		for (int i = (currentRound-1) * 4; i < (currentRound*4); i++)
+		{
+			for (int j = 0; j < 4; j++)
+			{
+				currentRoundKey[j][i-((currentRound-1)*4)] = roundKeys[j][i]; //extracting from roundKey, one 4x4 matrix at a time (this is doing it column-by-column)
+			}
+		}
+		addRoundKey (currentRoundKey, cipherTextInt);
 	}
 
 	//10th round skips mixColumns
