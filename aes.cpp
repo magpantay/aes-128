@@ -7,23 +7,10 @@ using namespace std;
 /* Global Variables */
 
 /* Functions */
-int rCon[256] = {
-  0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36, 0x6c, 0xd8, 0xab, 0x4d, 0x9a,
-  0x2f, 0x5e, 0xbc, 0x63, 0xc6, 0x97, 0x35, 0x6a, 0xd4, 0xb3, 0x7d, 0xfa, 0xef, 0xc5, 0x91, 0x39,
-  0x72, 0xe4, 0xd3, 0xbd, 0x61, 0xc2, 0x9f, 0x25, 0x4a, 0x94, 0x33, 0x66, 0xcc, 0x83, 0x1d, 0x3a,
-  0x74, 0xe8, 0xcb, 0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36, 0x6c, 0xd8,
-  0xab, 0x4d, 0x9a, 0x2f, 0x5e, 0xbc, 0x63, 0xc6, 0x97, 0x35, 0x6a, 0xd4, 0xb3, 0x7d, 0xfa, 0xef,
-  0xc5, 0x91, 0x39, 0x72, 0xe4, 0xd3, 0xbd, 0x61, 0xc2, 0x9f, 0x25, 0x4a, 0x94, 0x33, 0x66, 0xcc,
-  0x83, 0x1d, 0x3a, 0x74, 0xe8, 0xcb, 0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b,
-  0x36, 0x6c, 0xd8, 0xab, 0x4d, 0x9a, 0x2f, 0x5e, 0xbc, 0x63, 0xc6, 0x97, 0x35, 0x6a, 0xd4, 0xb3,
-  0x7d, 0xfa, 0xef, 0xc5, 0x91, 0x39, 0x72, 0xe4, 0xd3, 0xbd, 0x61, 0xc2, 0x9f, 0x25, 0x4a, 0x94,
-  0x33, 0x66, 0xcc, 0x83, 0x1d, 0x3a, 0x74, 0xe8, 0xcb, 0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20,
-  0x40, 0x80, 0x1b, 0x36, 0x6c, 0xd8, 0xab, 0x4d, 0x9a, 0x2f, 0x5e, 0xbc, 0x63, 0xc6, 0x97, 0x35,
-  0x6a, 0xd4, 0xb3, 0x7d, 0xfa, 0xef, 0xc5, 0x91, 0x39, 0x72, 0xe4, 0xd3, 0xbd, 0x61, 0xc2, 0x9f,
-  0x25, 0x4a, 0x94, 0x33, 0x66, 0xcc, 0x83, 0x1d, 0x3a, 0x74, 0xe8, 0xcb, 0x8d, 0x01, 0x02, 0x04,
-  0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36, 0x6c, 0xd8, 0xab, 0x4d, 0x9a, 0x2f, 0x5e, 0xbc, 0x63,
-  0xc6, 0x97, 0x35, 0x6a, 0xd4, 0xb3, 0x7d, 0xfa, 0xef, 0xc5, 0x91, 0x39, 0x72, 0xe4, 0xd3, 0xbd,
-  0x61, 0xc2, 0x9f, 0x25, 0x4a, 0x94, 0x33, 0x66, 0xcc, 0x83, 0x1d, 0x3a, 0x74, 0xe8, 0xcb, 0x8d };
+int RCon[4][10] = {0x01,0x02,0x04,0x08,0x10,0x20,0x40,0x80,0x1b,0x36,
+                   0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+                   0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+                   0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
 
 void printArrayInHex(int (&array)[4][4])
 {
@@ -115,69 +102,33 @@ int getValueFromSubstitutionBox (int value)
 	return sBox [value];
 }
 
-void generateRoundKeys(int (&roundKeyArray)[4][40], int key[4][4])
+void generateRoundKeys(int (&roundKeyArray)[4][44])
 {
-	int buffer[4] = {0,0,0,0};
-
-	//fill buffer with keys, moved over by 1 (like shift rows kinda)
-	for (int i = 1; i < 4; i++)
-	{
-		buffer[i-1] = key[i][3];
-	}
-	buffer[3] = key[0][3];
-
-	for (int i = 0; i < 4; i++)
-	{
-		buffer[i] = getValueFromSubstitutionBox(buffer[i]); //do subbytes on it
-		buffer[i] = buffer[i] ^ key[i][0]; //XOR with first column of key
-		buffer[i] = buffer[i] ^ RCon[i][0]; //then XOR result with first column of RCon
-	}
-		/* flush resulting buffer to first column of roundKeyArray */
-	for (int i = 0; i < 4; i++)
-	{
-		buffer[i] = roundKeyArray[i][0];
-	}
-
-	for (int i = 1; i < 4; i++)
-	{
-		for (int j = 0; j < 4; j++)
-		{
-			roundKeyArray[j][i] = key[j][i] ^ roundKeyArray[j][i-1]; //take second/third/fourth column of key, XOR it with result column from earlier
-		}
-	}
-
-	/* at this point on, key is no longer needed, and our for loop gets easier to write since we aren't dealing with two arrays, only 1 */
-	int temp = 0;
-	for (int i = 4; i < 40; i++) //since we did the first 4 columns earlier
-	{
-		if (i % 4 == 0) //means we are on the first column of our new subset of roundKeys
-		{
-			for (int k = 0; k < 4; k++)
-			{
-				roundKeyArray[k][i] = roundKeyArray[k][i-1]; //take all elements from previous column and put it in the new column
-			}
-			temp = roundKeyArray[0][i]; //swap them
-			roundKeyArray[0][i] = roundKeyArray[1][i];
-			roundKeyArray[1][i] = roundKeyArray[2][i];
-			roundKeyArray[2][i] = roundKeyArray[3][i];
-			roundKeyArray[3][i] = temp;
-		}
-		for (int j = 0; j < 4; j++)
-		{
-			if (i % 4 == 0)
-			{
-				roundKeyArray[j][i] = getValueFromSubstitutionBox(roundKeyArray[j][i]); //do subbytes on it
-				roundKeyArray[j][i] = roundKeyArray[j][i] ^ roundKeyArray[j][i-4]; //xor with first column of
-				roundKeyArray[j][i] = roundKeyArray[j][i] ^ RCon[j][i-3]; //XOR that result with next non-used column of RCon
-			}
-			else
-			{
-				roundKeyArray[j][i] = roundKeyArray[j][i] ^ roundKeyArray[j][i-3]; //take second/third/etc. column of key XOR it with previous column first/second/etc.
-			}
-		}
-	}
-
-
+  for (int i = 4; i < 44; i++)
+  {
+    if (i % 4 == 0)
+    {
+      for (int k = 1; k < 4; k++)
+      {
+        roundKeyArray[k-1][i] = roundKeyArray[k][i-1];
+        roundKeyArray[k-1][i] = getValueFromSubstitutionBox(roundKeyArray[k-1][i]);
+      }
+      roundKeyArray[3][i] = roundKeyArray[0][i-1];
+      roundKeyArray[3][i] = getValueFromSubstitutionBox(roundKeyArray[3][i]);
+    }
+    for (int j = 0; j < 4; j++)
+    {
+      if (i % 4 == 0)
+      {
+        roundKeyArray[j][i] = roundKeyArray[j][i] ^ roundKeyArray[j][i-4];
+        roundKeyArray[j][i] = roundKeyArray[j][i] ^ RCon[j][(i/4)-1];
+      }
+      else
+      {
+        roundKeyArray[j][i] = roundKeyArray[j][i-1] ^ roundKeyArray[j][i-4];
+      }
+    }
+  }
 	/* According to the video:
 	Take the last column, rotate it (so 9,cf,4f,3c becomes cf,4f,3c,9)
 	Do SubBytes on it (use substitution())
@@ -319,7 +270,7 @@ void mixColumns (int (&chunks)[4][4])
 	}
 }
 
-void addRoundKey (int key[4][4], int (&chunks)[4][4])
+void addRoundKey (int (&key)[4][4], int (&chunks)[4][4])
 {
 	//XOR currentRound with chunks
 	/*for (int i = 0; i < 4; i++)
@@ -385,13 +336,22 @@ int main (int argc, char * argv[])
 	}
 	//if input size > 128 then split into 128-bit chunks (will do later, need to get mixColumns and addRoundKey functioning first)
 
+  int roundKeys[4][44];
+  for (int i = 0; i < 4; i++)
+  {
+    for (int j = 0; j < 4; j++)
+    {
+      roundKeys[i][j] = keyInt[i][j]; //so we only have to handle one arrary instead of two
+    }
+  }
+
 	if (argc > 1 && argc < 3) //for debug mode
 	{
 		if (*argv[1] == 'd')
 		{
 			int choice = 0;
 			cout << "Debugger mode: Please select one of the functions to test" << endl;
-			cout << "0. Simulate Substitution, Shift Rows, then Mix Columns" << endl << "1. Substitution" << endl << "2. Shift Rows" << endl << "3. Mix Columns" << endl << "4. Add Round Key (0th round simulation only)" << endl;
+			cout << "0. Simulate Substitution, Shift Rows, then Mix Columns" << endl << "1. Substitution" << endl << "2. Shift Rows" << endl << "3. Mix Columns" << endl << "4. Generating Round Keys" << endl;
 			cout << "Choice: ";
 			cin >> choice;
 			if (choice < 0 || choice > 4)
@@ -435,17 +395,26 @@ int main (int argc, char * argv[])
 			}
 			else
 			{
-				addRoundKey(0, cipherTextInt);
-				cout << "Output: ";
-				printArrayInHex(cipherTextInt);
-				cout << endl;
-				return 0;
+				generateRoundKeys(roundKeys);
+          for (int k = 0; k <= 10; k++)
+          {
+            for (int i = 0; i < 4; i++)
+            {
+              for (int j = k*4; j < (k+1) * 4; j++)
+              {
+                cout << roundKeys[i][j] << " ";
+              }
+            cout << endl;
+            }
+          cout << endl;
+          cout << endl;
+          }
+        return 0;
+        }
 			}
 		}
-	}
 
-	int roundKeys[4][40];
-	generateRoundKeys(roundKeys, keyInt);
+	generateRoundKeys(roundKeys);
 	//before starting, need to do addRoundKey for round 0
 	addRoundKey(keyInt, cipherTextInt);
 
@@ -455,7 +424,7 @@ int main (int argc, char * argv[])
 		substitution (cipherTextInt);
 		shiftRows (cipherTextInt);
 		mixColumns (cipherTextInt);
-		for (int i = (currentRound-1) * 4; i < (currentRound*4); i++)
+		for (int i = currentRound * 4; i < ((currentRound+1)*4); i++)
 		{
 			for (int j = 0; j < 4; j++)
 			{
@@ -468,7 +437,16 @@ int main (int argc, char * argv[])
 	//10th round skips mixColumns
 	substitution (cipherTextInt);
 	shiftRows (cipherTextInt);
-	addRoundKey (10, cipherTextInt);
+
+  for (int i = 40; i < 44; i++)
+  {
+    for (int j = 0; j < 4; j++)
+    {
+      currentRoundKey[j][i-40] = roundKeys[j][i];
+    }
+  }
+
+	addRoundKey (currentRoundKey, cipherTextInt);
 
 	//printing time
 	printArrayInHex(plainTextInt);
