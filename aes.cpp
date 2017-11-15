@@ -272,20 +272,15 @@ void mixColumns (int (&chunks)[4][4])
 
 void addRoundKey (int (&key)[4][4], int (&chunks)[4][4])
 {
-	//XOR currentRound with chunks
-	/*for (int i = 0; i < 4; i++)
-	{
-		for (int j = 0; j < 4; j++)
-		{
-			chunks[j][i] ^= RoundKey[currentRound * 16 + i * 4 + j]; //[currentRound * Nb * 4 + i + Nb + j], Nb = 4
-		} // ^ is a bitwise XOR
-	}
-
-	for (int i = 0; i < 128; i++) //AES-128 has a 128-bit block size
-	{
-		ciphertext[i] = plaintext[i]
-	}*/
-
+  //XOR each column of key with chunks
+  //or XOR each row of key with chunks
+  for (int i = 0; i < 4; i++)
+  {
+    for (int j = 0; j < 4; j++)
+    {
+      chunks[i][j] = chunks[i][j] ^ key[i][j];
+    }
+  }
 }
 int main (int argc, char * argv[])
 {
@@ -351,10 +346,10 @@ int main (int argc, char * argv[])
 		{
 			int choice = 0;
 			cout << "Debugger mode: Please select one of the functions to test" << endl;
-			cout << "0. Simulate Substitution, Shift Rows, then Mix Columns" << endl << "1. Substitution" << endl << "2. Shift Rows" << endl << "3. Mix Columns" << endl << "4. Generating Round Keys" << endl;
+			cout << "0. Simulate Substitution, Shift Rows, then Mix Columns" << endl << "1. Substitution" << endl << "2. Shift Rows" << endl << "3. Mix Columns" << endl << "4. Generating Round Keys" << endl << "5. Add Round Key (0th round check only)" << endl;
 			cout << "Choice: ";
 			cin >> choice;
-			if (choice < 0 || choice > 4)
+			if (choice < 0 || choice > 5)
 			{
 				cout << "Incorrect choice." << endl;
 				return 1;
@@ -393,7 +388,7 @@ int main (int argc, char * argv[])
 				cout << endl;
 				return 0;
 			}
-			else
+			else if (choice == 4)
 			{
 				generateRoundKeys(roundKeys);
           for (int k = 0; k <= 10; k++)
@@ -410,16 +405,25 @@ int main (int argc, char * argv[])
           cout << endl;
           }
         return 0;
-        }
-			}
+      }
+      else
+      {
+        cout << "Output: ";
+        addRoundKey(keyInt, cipherTextInt);
+        printArrayInHex(cipherTextInt);
+        cout << endl;
+        return 0;
+      }
 		}
+	}
 
-	generateRoundKeys(roundKeys);
+	generateRoundKeys(roundKeys); //to generate a 4x40 (44, including first 4x4 matrix of keyInt) array
 	//before starting, need to do addRoundKey for round 0
-	addRoundKey(keyInt, cipherTextInt);
 
 	int currentRoundKey[4][4];
-	for (int currentRound = 1; currentRound <= 9; currentRound++) //runs 9 times
+  addRoundKey(keyInt, cipherTextInt); //0th round
+
+	for (int currentRound = 1; currentRound <= 9; currentRound++) //runs 0-9 times
 	{
 		substitution (cipherTextInt);
 		shiftRows (cipherTextInt);
@@ -428,7 +432,7 @@ int main (int argc, char * argv[])
 		{
 			for (int j = 0; j < 4; j++)
 			{
-				currentRoundKey[j][i-((currentRound-1)*4)] = roundKeys[j][i]; //extracting from roundKey, one 4x4 matrix at a time (this is doing it column-by-column)
+				currentRoundKey[j][i-(currentRound*4)] = roundKeys[j][i]; //extracting from roundKey, one 4x4 matrix at a time (this is doing it column-by-column)
 			}
 		}
 		addRoundKey (currentRoundKey, cipherTextInt);
