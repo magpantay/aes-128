@@ -13,8 +13,9 @@ void printArrayInHex(int (&array)[4][4])
         {
                 for (int j = 0; j < 4; j++)
                 {
-                        cout << setfill('0') << setw(2) << std::hex << array[i][j]; //because 0x00 prints as 0 instead of 00
+                        cout << setfill('0') << setw(2) << std::hex << array[i][j] << " "; //because 0x00 prints as 0 instead of 00
                 }
+                cout << endl;
         }
 }
 
@@ -306,17 +307,17 @@ int main (int argc, char * argv[])
                 return 1;
         }
 
-        cout << "Plaintext before conversion: " << plainText << endl;
-        cout << "Key before conversion: " << key << endl;
+        cout << endl << "Plaintext before conversion: " << plainText << " (string)" << endl;
+        cout << "Key before conversion: " << key << " (string)" << endl << endl;
 
         int plainTextInt [4][4];
         stringToIntArrays(plainText, plainTextInt); //need to convert from string to int to perform mathematical operations
 
-        cout << "Plaintext after conversion: "; //just as a check
+        cout << "Plaintext after conversion (from string to int): " << endl; //just as a check
         printArrayInHex(plainTextInt);
         cout << endl;
 
-        cout << "Key after conversion: "; //same logic as above
+        cout << "Key after conversion (from string to int): " << endl; //same logic as above
         int keyInt[4][4];
         stringToIntArrays(key, keyInt);
         printArrayInHex(keyInt);
@@ -418,7 +419,7 @@ int main (int argc, char * argv[])
                 }
         }
 
-        generateRoundKeys(roundKeys); //to generate a 4x40 (44, including first 4x4 matrix of keyInt) array
+        generateRoundKeys(roundKeys); //to generate a 4x40 (44, including first 4x4 matrix of keyInt) array, it's our key scheduler
         //before starting, need to do addRoundKey for round 0
 
         int currentRoundKey[4][4];
@@ -454,8 +455,9 @@ int main (int argc, char * argv[])
         addRoundKey (currentRoundKey, cipherTextInt);
 
         //printing time
+        cout << "The input: " << endl;
         printArrayInHex(plainTextInt);
-        cout << " encrypted in AES-128 is ";
+        cout << endl << "encrypted in AES-128 is:" << endl;
         printArrayInHex(cipherTextInt);
         cout << endl;
 
