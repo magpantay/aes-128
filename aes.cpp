@@ -36,11 +36,6 @@ void printArrayInHex(int (&array)[4][4])
 	}
 }
 
-void generateRoundKeys(int (&roundKeyArray)[4][40], int key[4][4])
-{
-
-}
-
 bool isUpperCase(char part)
 {
 	return ((part - 'A') < 6); //is upperCase (up to F only) [A-F]
@@ -119,6 +114,87 @@ int getValueFromSubstitutionBox (int value)
 				0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f, 0xb0, 0x54, 0xbb, 0x16	};
 	return sBox [value];
 }
+
+void generateRoundKeys(int (&roundKeyArray)[4][40], int key[4][4])
+{
+	int buffer[4] = {0,0,0,0};
+
+	//fill buffer with keys, moved over by 1 (like shift rows kinda)
+	for (int i = 1; i < 4; i++)
+	{
+		buffer[i-1] = key[i][3];
+	}
+	buffer[3] = key[0][3];
+
+	for (int i = 0; i < 4; i++)
+	{
+		buffer[i] = getValueFromSubstitutionBox(buffer[i]); //do subbytes on it
+		buffer[i] = buffer[i] ^ key[i][0]; //XOR with first column of key
+		buffer[i] = buffer[i] ^ RCon[i][0]; //then XOR result with first column of RCon
+	}
+		/* flush resulting buffer to first column of roundKeyArray */
+	for (int i = 0; i < 4; i++)
+	{
+		buffer[i] = roundKeyArray[i][0];
+	}
+
+	for (int i = 1; i < 4; i++)
+	{
+		for (int j = 0; j < 4; j++)
+		{
+			roundKeyArray[j][i] = key[j][i] ^ roundKeyArray[j][i-1]; //take second/third/fourth column of key, XOR it with result column from earlier
+		}
+	}
+
+	/* at this point on, key is no longer needed, and our for loop gets easier to write since we aren't dealing with two arrays, only 1 */
+	int temp = 0;
+	for (int i = 4; i < 40; i++) //since we did the first 4 columns earlier
+	{
+		if (i % 4 == 0) //means we are on the first column of our new subset of roundKeys
+		{
+			for (int k = 0; k < 4; k++)
+			{
+				roundKeyArray[k][i] = roundKeyArray[k][i-1]; //take all elements from previous column and put it in the new column
+			}
+			temp = roundKeyArray[0][i]; //swap them
+			roundKeyArray[0][i] = roundKeyArray[1][i];
+			roundKeyArray[1][i] = roundKeyArray[2][i];
+			roundKeyArray[2][i] = roundKeyArray[3][i];
+			roundKeyArray[3][i] = temp;
+		}
+		for (int j = 0; j < 4; j++)
+		{
+			if (i % 4 == 0)
+			{
+				roundKeyArray[j][i] = getValueFromSubstitutionBox(roundKeyArray[j][i]); //do subbytes on it
+				roundKeyArray[j][i] = roundKeyArray[j][i] ^ roundKeyArray[j][i-4]; //xor with first column of
+				roundKeyArray[j][i] = roundKeyArray[j][i] ^ RCon[j][i-3]; //XOR that result with next non-used column of RCon
+			}
+			else
+			{
+				roundKeyArray[j][i] = roundKeyArray[j][i] ^ roundKeyArray[j][i-3]; //take second/third/etc. column of key XOR it with previous column first/second/etc.
+			}
+		}
+	}
+
+
+	/* According to the video:
+	Take the last column, rotate it (so 9,cf,4f,3c becomes cf,4f,3c,9)
+	Do SubBytes on it (use substitution())
+	XOR with first column of key
+	XOR that result with first column of RCon (then second, third, etc. until 10th)
+	This results in the first column of roundKey
+
+	Second, third, fourth column:
+	Take second/third/fourth column of key, XOR it with result got earlier from first/second/third column result
+
+	Repeat until 10th roundkey 4x4 matrix is filled
+
+	These 4x4 matrices will be your roundKeys for each round
+	All you do is XOR column of chunks with column of roundKey, 1-to-1
+	*/
+}
+
 
 void substitution (int (&chunks)[4][4])
 {
@@ -259,21 +335,6 @@ void addRoundKey (int key[4][4], int (&chunks)[4][4])
 		ciphertext[i] = plaintext[i]
 	}*/
 
-	/* According to the video:
-	Take the last column, rotate it (so 9,cf,4f,3c becomes cf,4f,3c,9)
-	Do SubBytes on it (use substitution())
-	XOR with first column of key
-	XOR that result with first column of RCon (then second, third, etc. until 10th)
-	This results in the first column of roundKey
-
-	Second, third, fourth column:
-	Take second/third/fourth column of key, XOR it with result got earlier from first/second/third column result
-
-	Repeat until 10th roundkey 4x4 matrix is filled
-
-	These 4x4 matrices will be your roundKeys for each round
-	All you do is XOR column of chunks with column of roundKey, 1-to-1
-	*/
 }
 int main (int argc, char * argv[])
 {
