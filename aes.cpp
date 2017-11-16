@@ -55,7 +55,7 @@ void stringToIntArrays (string plainText, int (&plainTextInt)[4][4])
                                         part1 = plainText[0];
                                         plainTextTraversal++;
                                         part1Int = checks(part1);
-                                        plainTextInt[i][j] = part1Int * 1; //multiplying by 1 makes it work for some reason
+                                        plainTextInt[j][i] = part1Int * 1; //multiplying by 1 makes it work for some reason
                                 }
                                 else
                                 {
@@ -67,11 +67,11 @@ void stringToIntArrays (string plainText, int (&plainTextInt)[4][4])
 
                                         part1Int *= 16; //turns it into proper hexadecimal for the first number
                                         part2Int *= 1; //same logic as above
-                                        plainTextInt[i][j] = part1Int + part2Int;
+                                        plainTextInt[j][i] = part1Int + part2Int; //not supposed to be i,j the way I had it before because the string is supposed to go column-by-column according to the video (and is how all the encryptors I found online do it)
                                 }
                         }
                         else
-                                plainTextInt[i][j] = 0x00; //0x00, fill in rest with 0s until it is 128-bits
+                                plainTextInt[j][i] = 0x00; //0x00, fill in rest with 0s until it is 128-bits
                 }
         }
 }
@@ -422,7 +422,7 @@ int main (int argc, char * argv[])
         generateRoundKeys(roundKeys); //to generate a 4x40 (44, including first 4x4 matrix of keyInt) array, it's our key scheduler
         //before starting, need to do addRoundKey for round 0
 
-        int currentRoundKey[4][4];
+        int currentRoundKey[4][4]; //used in the individual rounds of addRoundKey (populates values from the 4x44 matrix roundKeys)
         addRoundKey(keyInt, cipherTextInt); //0th round
 
         for (int currentRound = 1; currentRound <= 9; currentRound++) //runs 0-9 times
