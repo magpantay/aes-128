@@ -455,11 +455,21 @@ int main (int argc, char * argv[])
         addRoundKey (currentRoundKey, cipherTextInt);
 
         //printing time
-        cout << "The input: " << endl;
-        printArrayInHex(plainTextInt);
-        cout << endl << "encrypted in AES-128 is:" << endl;
+        cout << "---------------------------------------------------------------------------------------------------------" << endl;
+        cout << endl << "4x4 Matrix Ciphertext: " << endl;
         printArrayInHex(cipherTextInt);
         cout << endl;
+
+        //prints the cipherText in a line (just to be sure)
+        cout << "Inline Ciphertext: ";
+        for (int i = 0; i < 4; i++)
+        {
+                for (int j = 0; j < 4; j++)
+                {
+                        cout << cipherTextInt[i][j];
+                }
+        }
+        cout << endl << endl;
 
         return 0;
 }
