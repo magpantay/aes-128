@@ -466,7 +466,7 @@ int main (int argc, char * argv[])
         {
                 for (int j = 0; j < 4; j++)
                 {
-                        cout << cipherTextInt[i][j];
+                        cout << cipherTextInt[j][i];
                 }
         }
         cout << endl << endl;
