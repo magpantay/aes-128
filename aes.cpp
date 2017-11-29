@@ -4,9 +4,6 @@
 
 using namespace std;
 
-/* Global Variables */
-
-/* Functions */
 void printArrayInHex(int (&array)[4][4])
 {
         for (int i = 0; i < 4; i++)
@@ -80,7 +77,7 @@ void stringToIntArrays (string plainText, int (&plainTextInt)[4][4])
 
 int getValueFromSubstitutionBox (int value)
 {
-        int sBox [256] = {
+        const int sBox [256] = {
                 0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76,
                 0xca, 0x82, 0xc9, 0x7d, 0xfa, 0x59, 0x47, 0xf0, 0xad, 0xd4, 0xa2, 0xaf, 0x9c, 0xa4, 0x72, 0xc0,
                 0xb7, 0xfd, 0x93, 0x26, 0x36, 0x3f, 0xf7, 0xcc, 0x34, 0xa5, 0xe5, 0xf1, 0x71, 0xd8, 0x31, 0x15,
@@ -103,7 +100,7 @@ int getValueFromSubstitutionBox (int value)
 
 void generateRoundKeys(int (&roundKeyArray)[4][44])
 {
-        int RCon[4][10] = {0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36,
+        const int RCon[4][10] = {0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36,
                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
@@ -212,7 +209,7 @@ int calculations (int currentRowMCW[4], int currentColumnC[4])
 
 void mixColumns (int (&chunks)[4][4])
 {
-        int mixColumnsWith[4][4] = {  0x02, 0x03, 0x01, 0x01,
+        const int mixColumnsWith[4][4] = {  0x02, 0x03, 0x01, 0x01,
                                       0x01, 0x02, 0x03, 0x01,
                                       0x01, 0x01, 0x02, 0x03,
                                       0x03, 0x01, 0x01, 0x02  };
@@ -381,8 +378,8 @@ int main (int argc, char * argv[])
 
         //if input size > 128 then split into 128-bit chunks
         //need to create a string array and a 3d array
-        int numberOfChunks = plainTextFull.length() / 32; //for splitting into 128-bits
-        int addingFactor = plainTextFull.length() % 32 == 0 ? 0 : 1; //if there is even a remainder left, then make this thing 1
+        const int numberOfChunks = plainTextFull.length() / 32; //for splitting into 128-bits
+        const int addingFactor = plainTextFull.length() % 32 == 0 ? 0 : 1; //if there is even a remainder left, then make this thing 1
         string plainText[numberOfChunks + addingFactor]; //minimal amount of code needs to be changed if I just use an array of strings
         int endResult[numberOfChunks+addingFactor][4][4];
 
