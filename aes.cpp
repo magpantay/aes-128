@@ -484,7 +484,7 @@ int main (int argc, char * argv[])
                 {
                         for (int k = 0; k < 4; k++)
                         {
-                                cout << setfill('0') << setw(2) << std::hex << endResult[i][k][j]; //need to print column-by-column our concatenated result
+                                cout << setfill('0') << setw(2) << std::hex << endResult[i][k][j] << " "; //need to print column-by-column our concatenated result
                         }
                 }
         }
