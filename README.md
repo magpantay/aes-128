@@ -5,7 +5,7 @@ This repository contains the AES-128 project that was done for my Network Securi
 
 ## What It Does
 - Takes a hexadecimal string from the user
-  - Plaintext input
+  - Known as plaintext
   - Example: *1f2e3d4c5b6a79*
 - Takes another hexadecimal string from the user, maximum 32 characters (as it has to be a 128-bit key)
   - The key used for encrypting the plaintext input
