@@ -54,7 +54,7 @@ void stringToIntArrays (string plainText, int (&plainTextInt)[4][4])
                                       part1 = plainText[plainTextTraversal];
                                       plainTextTraversal++;
                                       part1Int = checks(part1);
-                                      plainTextInt[j][i] = part1Int * 1; //assumes the last number is 0x0#, so 123 is going to store as 0x01, 0x02, 0x03
+                                      plainTextInt[j][i] = part1Int * 1; //assumes the last number is 0x0#, so 123 is going to store as 0x12, 0x03
                                 }
                                 else
                                 {
