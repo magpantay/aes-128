@@ -19,7 +19,7 @@ This repository contains the AES-128 project that was done for my Network Securi
 - Anything else
 
 ## Examples
-### Example 1: Plaintext < 32 characters, Key contains exactly 32 characters
+#### Example 1: Plaintext < 32 characters, Key contains exactly 32 characters
     Enter hexadecimal-based plaintext (i.e., 0x1f, 0x2f is inputted as 1f2f): 1f2e3d4c5b6a79
     Enter key in a similar way as above: 1f2f3f4f5f6f7f8f9fafbfcfdfefff
 
@@ -55,7 +55,7 @@ This repository contains the AES-128 project that was done for my Network Securi
 
     The combined ciphertext: ee f5 55 14 2a fe 46 bb d7 cb b2 b7 e0 54 f4 c5
 
-### Example 2: Neither plaintext nor key contain >= 32 characters
+#### Example 2: Neither plaintext nor key contain >= 32 characters
     Enter hexadecimal-based plaintext (i.e., 0x1f, 0x2f is inputted as 1f2f): 1f2f3f
     Enter key in a similar way as above: 999999
 
@@ -91,7 +91,7 @@ This repository contains the AES-128 project that was done for my Network Securi
 
     The combined ciphertext: 84 3f 1e f1 f9 42 fa 1b 01 d1 c2 64 b1 f3 cb 2d
 
-## Example 3: Plaintext contains > 32 characters
+#### Example 3: Plaintext contains > 32 characters
     Enter hexadecimal-based plaintext (i.e., 0x1f, 0x2f is inputted as 1f2f): ffeeddccbbaa9988776655443322111f2f3f4f5f6f7f8f9fafbfcfdfefff
     Enter key in a similar way as above: 112233445566778899aabbccddeeff
 
